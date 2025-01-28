@@ -17,3 +17,6 @@ wheels/
 
 # env files
 .env
+
+# test files
+foo.py

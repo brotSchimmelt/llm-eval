@@ -1,4 +1,7 @@
 import re
+from typing import List
+
+import ollama
 
 
 def extract_numeric_value(input_str: str) -> float:
@@ -25,3 +28,13 @@ def extract_numeric_value(input_str: str) -> float:
     except Exception as e:
         print(f"Error extracting numeric value: {e}")
         return 0.0
+
+
+def get_local_ollama_model_names() -> List[str]:
+    """
+    Retrieves the names of all locally available Ollama models.
+
+    Returns:
+        List[str]: A list of model names in the format "ollama/<model_name>".
+    """
+    return [f"ollama/{m.model}" for m in ollama.list().models]

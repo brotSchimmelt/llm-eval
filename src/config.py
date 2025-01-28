@@ -6,7 +6,7 @@ DEFAULT_SETTINGS = {
     "system_prompt": "Only provide the final answer and no other tokens.",
     "top_p": 0.95,
     "max_tokens": 256,
-    "temperature": 1.0,
+    "temperature": 0.7,
 }
 
 GRADING_PROMPT = """

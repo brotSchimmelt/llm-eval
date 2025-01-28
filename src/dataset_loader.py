@@ -1,12 +1,11 @@
 import os
-from typing import Optional
+from typing import Any, Optional
 
 import pandas as pd
 import streamlit as st
 from pandas import DataFrame
-from streamlit.uploaded_file_manager import UploadedFile
 
-from .config import DEFAULT_SETTINGS
+from config import DEFAULT_SETTINGS
 
 
 class DatasetLoader:
@@ -20,14 +19,14 @@ class DatasetLoader:
 
     def load_dataset(
         self,
-        uploaded_file: Optional[UploadedFile] = None,
+        uploaded_file: Optional[Any] = None,
         predefined_name: Optional[str] = None,
     ) -> Optional[DataFrame]:
         """
         Loads a dataset from an uploaded file or a predefined dataset name.
 
         Args:
-            uploaded_file (Optional[UploadedFile], optional): The uploaded file object (CSV or JSON).
+            uploaded_file (Optional[Any], optional): The uploaded file object (CSV or JSON).
             predefined_name (Optional[str], optional): The name of the predefined dataset to load.
 
         Returns:
@@ -40,12 +39,12 @@ class DatasetLoader:
             return self._load_predefined(predefined_name)
         return None
 
-    def _handle_uploaded_file(self, file: UploadedFile) -> Optional[DataFrame]:
+    def _handle_uploaded_file(self, file: Any) -> Optional[DataFrame]:
         """
         Handles the processing of an uploaded dataset file.
 
         Args:
-            file (UploadedFile): The uploaded file object to be processed.
+            file (Any): The uploaded file object to be processed.
 
         Returns:
             Optional[DataFrame]: A Pandas DataFrame containing the dataset if successfully loaded,

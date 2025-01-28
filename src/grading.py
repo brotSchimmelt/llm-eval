@@ -1,8 +1,8 @@
 import litellm
 import streamlit as st
 
-from .config import DEFAULT_SETTINGS, GRADING_PROMPT
-from .utils import extract_numeric_value
+from config import DEFAULT_SETTINGS, GRADING_PROMPT
+from utils import extract_numeric_value
 
 
 class ExactMatchGrader:

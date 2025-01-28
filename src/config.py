@@ -2,6 +2,7 @@ DEFAULT_SETTINGS = {
     "predefined_dataset_path": "data/predefined",
     "custom_dataset_path": "data/custom",
     "grading_model": "gpt-4o-mini",
+    "available_models": ["gpt-4o-mini"],
 }
 
 GRADING_PROMPT = """

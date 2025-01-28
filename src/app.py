@@ -35,16 +35,19 @@ def main():
         )
 
         system_prompt = st.text_area(
-            "System Prompt", "You are a helpful AI assistant.", height=150
+            "System Prompt", DEFAULT_SETTINGS["system_prompt"], height=150
         )
 
         col1, col2 = st.columns(2)
-        temperature = col1.number_input("Temperature", 0.0, 2.0, 0.7)
-        max_tokens = col2.number_input("Max Tokens", 50, 2000, 300)
+        top_p = col1.number_input("Top-p", 0.0, 1.0, DEFAULT_SETTINGS["top_p"])
+        temperature = col2.number_input(
+            "Temperature", 0.0, 2.0, DEFAULT_SETTINGS["temperature"]
+        )
 
-        col3, col4 = st.columns(2)
-        top_p = col3.number_input("Top-p", 0.0, 1.0, 1.0)
-        top_k = col4.number_input("Top-k", 1, 100, 40)
+        col3, _ = st.columns(2)
+        max_tokens = col3.number_input(
+            "Max Tokens", 50, 2000, DEFAULT_SETTINGS["max_tokens"]
+        )
 
         eval_method = st.radio(
             "Evaluation Method", ["Exact Match", "LLM Criteria"], index=0
@@ -107,7 +110,6 @@ def main():
                                     ],
                                     temperature=temperature,
                                     top_p=top_p,
-                                    top_k=top_k,
                                     max_tokens=max_tokens,
                                 )
                                 .choices[0]

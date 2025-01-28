@@ -3,6 +3,10 @@ DEFAULT_SETTINGS = {
     "custom_dataset_path": "data/custom",
     "grading_model": "gpt-4o-mini",
     "available_models": ["gpt-4o-mini"],
+    "system_prompt": "Only provide the final answer and no other tokens.",
+    "top_p": 0.95,
+    "max_tokens": 256,
+    "temperature": 1.0,
 }
 
 GRADING_PROMPT = """

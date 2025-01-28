@@ -46,7 +46,7 @@ def main():
 
         col3, _ = st.columns(2)
         max_tokens = col3.number_input(
-            "Max Tokens", 50, 2000, DEFAULT_SETTINGS["max_tokens"]
+            "Max Tokens", 50, 8_192, DEFAULT_SETTINGS["max_tokens"]
         )
 
         eval_method = st.radio(
@@ -71,11 +71,13 @@ def main():
 
         elif dataset_choice == "Predefined Dataset":
             predefined_name = st.selectbox(
-                "Select Dataset", ["mathqa", "safetyqa"], index=0
+                "Select Dataset",
+                ["placeholder_mathqa", "placeholder_safetyqa"],
+                index=0,
             )
             df = loader.load_dataset(predefined_name=predefined_name)
 
-        else:  # Sample dataset TODO remove later
+        else:  # Sample dataset TODO fix later
             df = pd.DataFrame(
                 {
                     "question": [
@@ -97,47 +99,56 @@ def main():
 
             if st.button("▶️ Run Evaluation", type="primary"):
                 results = []
-                with st.spinner("Evaluating..."):
-                    for _, row in df.iterrows():
-                        try:
-                            # Generate response
-                            response = (
-                                litellm.completion(
-                                    model=model_name,
-                                    messages=[
-                                        {"role": "system", "content": system_prompt},
-                                        {"role": "user", "content": row["question"]},
-                                    ],
-                                    temperature=temperature,
-                                    top_p=top_p,
-                                    max_tokens=max_tokens,
-                                )
-                                .choices[0]
-                                .message.content
+                progress_bar = st.progress(0)
+                total_questions = len(df)
+                results = []
+
+                for idx, row in enumerate(df.iterrows()):
+                    try:
+                        # Generate response
+                        response = (
+                            litellm.completion(
+                                model=model_name,
+                                messages=[
+                                    {"role": "system", "content": system_prompt},
+                                    {"role": "user", "content": row[1]["question"]},
+                                ],
+                                temperature=temperature,
+                                top_p=top_p,
+                                max_tokens=max_tokens,
                             )
+                            .choices[0]
+                            .message.content
+                        )
 
-                            # Grade response
-                            if eval_method == "Exact Match":
-                                score = ExactMatchGrader.grade(
-                                    response, row["ground_truth"]
-                                )
-                            else:
-                                criteria = row.get(
-                                    "criteria", "Is the answer accurate and helpful?"
-                                )
-                                score = LLMGrader.grade(response, criteria)
-
-                            results.append(
-                                {
-                                    "Question": row["question"],
-                                    "Expected": row["ground_truth"],
-                                    "Response": response,
-                                    "Score": score,
-                                }
+                        # Grade response
+                        if eval_method == "Exact Match":
+                            score = ExactMatchGrader.grade(
+                                response, row[1]["ground_truth"]
                             )
+                        else:
+                            criteria = row[1].get(
+                                "criteria", "Is the answer accurate and helpful?"
+                            )
+                            score = LLMGrader.grade(response, criteria)
 
-                        except Exception as e:
-                            st.error(f"Error processing question: {str(e)}")
+                        results.append(
+                            {
+                                "Question": row[1]["question"],
+                                "Expected": row[1]["ground_truth"],
+                                "Response": response,
+                                "Score": score,
+                            }
+                        )
+
+                    except Exception as e:
+                        st.error(f"Error processing question: {str(e)}")
+
+                    # Update progress bar
+                    progress_bar.progress((idx + 1) / total_questions)
+
+                # Clear progress bar after completion
+                progress_bar.empty()
 
                 # show results
                 st.subheader("Results")

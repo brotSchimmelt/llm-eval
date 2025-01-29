@@ -5,7 +5,11 @@ from dotenv import load_dotenv
 from config import DEFAULT_SETTINGS, DEMO_DATASET
 from dataset_loader import DatasetLoader
 from grading import ExactMatchGrader, LLMGrader
-from utils import get_local_ollama_model_names, get_model_response
+from utils import (
+    extract_params_from_user_text,
+    get_local_ollama_model_names,
+    get_model_response,
+)
 
 load_dotenv()
 
@@ -38,7 +42,7 @@ def main():
         if "precomputed_error" not in st.session_state:
             st.session_state.precomputed_error = None
 
-        if sidebar_mode == sidebar_selections[0]:  # live Model
+        if sidebar_mode == sidebar_selections[0]:  # live model
             st.header("⚙️ Model Settings")
 
             model_name = st.selectbox(
@@ -61,6 +65,13 @@ def main():
             max_tokens = col3.number_input(
                 "Max Tokens", 50, 8_192, DEFAULT_SETTINGS["max_tokens"]
             )
+
+            extra_params = st.text_area(
+                "Additional Parameters",
+                "{ ... enter additional sampling parameters in JSON format here ... }",
+                height=150,
+            )
+
         else:  # precomputed Responses
             st.header("📁 Precomputed Data")
             uploaded_file = st.file_uploader(
@@ -148,11 +159,14 @@ def main():
                 total_questions = len(df)
 
                 if sidebar_mode == "Live Model":
-                    sampling_params = {
-                        "temperature": temperature,
-                        "top_p": top_p,
-                        "max_tokens": max_tokens,
-                    }
+                    sampling_params = extract_params_from_user_text(extra_params)
+                    sampling_params.update(
+                        {
+                            "temperature": temperature,
+                            "top_p": top_p,
+                            "max_tokens": max_tokens,
+                        }
+                    )
 
                     for idx, row in enumerate(df.iterrows()):
                         try:

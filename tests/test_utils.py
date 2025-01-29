@@ -2,6 +2,7 @@ import pytest
 
 from src.utils import (
     extract_numeric_value,
+    extract_params_from_user_text,
     get_model_response,
     remove_thinking_sections,
 )
@@ -91,3 +92,38 @@ def test_missing_closing_thinking_tag():
     response = "<think>Computation in progress..."
     expected = response
     assert remove_thinking_sections(response) == expected
+
+
+def test_valid_json():
+    user_text = '{"temperature": 0.7, "top_p": 0.9}'
+    expected = {"temperature": 0.7, "top_p": 0.9}
+    assert extract_params_from_user_text(user_text) == expected
+
+
+def test_invalid_json_fixed():
+    user_text = '{"temperature": 0.7, "top_p": 0.9,'  # Missing closing bracket
+    expected = {"temperature": 0.7, "top_p": 0.9}
+    assert extract_params_from_user_text(user_text) == expected
+
+
+def test_empty_input():
+    assert extract_params_from_user_text("") == {}
+
+
+def test_json_with_extra_text():
+    user_text = 'Here is some text before JSON: {"temperature": 0.7, "top_p": 0.9}'
+    assert extract_params_from_user_text(user_text) == {
+        "temperature": 0.7,
+        "top_p": 0.9,
+    }
+
+
+def test_non_json_input():
+    user_text = "Just some random text, nothing JSON here."
+    assert extract_params_from_user_text(user_text) == {}
+
+
+def test_nested_json():
+    user_text = '{"model": "gpt-4", "params": {"temperature": 0.8, "max_tokens": 200}}'
+    expected = {"model": "gpt-4", "params": {"temperature": 0.8, "max_tokens": 200}}
+    assert extract_params_from_user_text(user_text) == expected

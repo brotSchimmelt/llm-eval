@@ -2,6 +2,7 @@ import re
 import subprocess
 from typing import Any, Dict, List
 
+import json_repair
 import litellm
 import ollama
 
@@ -116,3 +117,25 @@ def remove_thinking_sections(response: str) -> str:
         str: The cleaned response without the <think>...</think> sections.
     """
     return re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
+
+
+def extract_params_from_user_text(user_text: str) -> Dict[str, Any]:
+    """
+    Extracts and repairs JSON parameters from a free-text user input.
+
+    Args:
+        user_text (str): The user-provided text containing JSON.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the parsed parameters if the input is valid.
+                        Returns an empty dictionary `{}` if parsing fails or input is empty.
+    """
+    if not user_text:
+        return {}
+
+    params = json_repair.repair_json(user_text, return_objects=True)
+
+    if isinstance(params, str):
+        return {}
+
+    return params

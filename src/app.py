@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from config import DEFAULT_SETTINGS
+from config import DEFAULT_SETTINGS, DEMO_DATASET
 from dataset_loader import DatasetLoader
 from grading import ExactMatchGrader, LLMGrader
 from utils import get_local_ollama_model_names, get_model_response
@@ -79,20 +79,7 @@ def main():
             df = loader.load_dataset(predefined_name=predefined_name)
 
         else:
-            df = pd.DataFrame(
-                {
-                    "question": [
-                        "What is 2+2?",
-                        "What is the capital of France?",
-                        "Explain quantum computing in simple terms",
-                    ],
-                    "ground_truth": [
-                        "4",
-                        "Paris",
-                        "Quantum computing uses quantum bits to perform calculations using quantum mechanics principles",
-                    ],
-                }
-            )
+            df = pd.DataFrame(DEMO_DATASET)
 
         if df is not None:
             st.subheader("Dataset Preview")

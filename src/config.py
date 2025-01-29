@@ -18,3 +18,17 @@ Criteria: {criteria}
 Response: {response}
 
 Score: """
+
+
+DEMO_DATASET = {
+    "question": [
+        "What is 2+2?",
+        "What is the capital of France?",
+        "Explain quantum computing in simple terms",
+    ],
+    "ground_truth": [
+        "4",
+        "Paris",
+        "Quantum computing uses quantum bits to perform calculations using quantum mechanics principles",
+    ],
+}

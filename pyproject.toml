@@ -5,6 +5,7 @@ description = "Evaluate LLM pipelines on predefined or custom datasets with diff
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "json-repair>=0.35.0",
     "litellm>=1.59.8",
     "ollama>=0.4.7",
     "pandas>=2.2.3",

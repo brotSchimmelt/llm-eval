@@ -1,4 +1,6 @@
-from src.utils import extract_numeric_value
+import pytest
+
+from src.utils import extract_numeric_value, get_model_response
 
 
 def test_extract_numeric_value_with_float():
@@ -35,3 +37,13 @@ def test_extract_numeric_value_with_special_characters():
 
 def test_extract_numeric_value_with_only_special_characters():
     assert extract_numeric_value("!@#$%^&*()") == 0.0
+
+
+def test_empty_model_name():
+    with pytest.raises(ValueError, match="The model_name must be a non-empty string."):
+        get_model_response("", "What is AI?", "", {"temperature": 0.7})
+
+
+def test_empty_prompt():
+    with pytest.raises(ValueError, match="The prompt must be a non-empty string."):
+        get_model_response("gpt-4", "", "", {"temperature": 0.7})

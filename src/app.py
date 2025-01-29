@@ -1,4 +1,3 @@
-import litellm
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
@@ -6,7 +5,7 @@ from dotenv import load_dotenv
 from config import DEFAULT_SETTINGS
 from dataset_loader import DatasetLoader
 from grading import ExactMatchGrader, LLMGrader
-from utils import get_local_ollama_model_names
+from utils import get_local_ollama_model_names, get_model_response
 
 load_dotenv()
 
@@ -101,24 +100,21 @@ def main():
                 results = []
                 progress_bar = st.progress(0)
                 total_questions = len(df)
-                results = []
+
+                sampling_params = {
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "max_tokens": max_tokens,
+                }
 
                 for idx, row in enumerate(df.iterrows()):
                     try:
-                        # Generate response
-                        response = (
-                            litellm.completion(
-                                model=model_name,
-                                messages=[
-                                    {"role": "system", "content": system_prompt},
-                                    {"role": "user", "content": row[1]["question"]},
-                                ],
-                                temperature=temperature,
-                                top_p=top_p,
-                                max_tokens=max_tokens,
-                            )
-                            .choices[0]
-                            .message.content
+                        prompt = row[1]["question"]
+                        response = get_model_response(
+                            model_name,
+                            prompt,
+                            system_prompt,
+                            sampling_params,
                         )
 
                         # Grade response

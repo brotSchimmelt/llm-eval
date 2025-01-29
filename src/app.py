@@ -100,6 +100,13 @@ def main():
             "Evaluation Method", ["Exact Match", "LLM Criteria"], index=0
         )
 
+        if eval_method == "LLM Criteria":
+            judge_model = st.selectbox(
+                "Select the Judge Model",
+                available_model_names,
+                index=0,
+            )
+
     # ===== Main Interface =====
     tab1, tab2 = st.tabs(["📊 Evaluation", "📂 Datasets"])
 
@@ -168,7 +175,9 @@ def main():
                                     "fallback_criteria"
                                 ].format(context)
                                 criteria = row[1].get("criteria", fallback_criteria)
-                                score = LLMGrader.grade(response, criteria)
+                                score = LLMGrader.grade(
+                                    response, criteria, model=judge_model
+                                )
 
                             results.append(
                                 {
@@ -229,7 +238,9 @@ def main():
                                     "fallback_criteria"
                                 ].format(context)
                                 criteria = row[1].get("criteria", fallback_criteria)
-                                score = LLMGrader.grade(response, criteria)
+                                score = LLMGrader.grade(
+                                    response, criteria, model=judge_model
+                                )
 
                             results.append(
                                 {

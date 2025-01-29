@@ -1,6 +1,10 @@
 import pytest
 
-from src.utils import extract_numeric_value, get_model_response
+from src.utils import (
+    extract_numeric_value,
+    get_model_response,
+    remove_thinking_sections,
+)
 
 
 def test_extract_numeric_value_with_float():
@@ -47,3 +51,43 @@ def test_empty_model_name():
 def test_empty_prompt():
     with pytest.raises(ValueError, match="The prompt must be a non-empty string."):
         get_model_response("gpt-4", "", "", {"temperature": 0.7})
+
+
+def test_remove_single_thinking_block():
+    response = "<think>This is an internal thought.</think> The answer is 42."
+    expected = "The answer is 42."
+    assert remove_thinking_sections(response) == expected
+
+
+def test_remove_multiple_thinking_blocks():
+    response = "<think>Step 1: Analyzing...</think> Here is your answer. <think>Step 2: Verifying...</think>"
+    expected = "Here is your answer."
+    assert remove_thinking_sections(response) == expected
+
+
+def test_remove_thinking_with_multiline_content():
+    response = """<think>
+    First, I recognize that the problem asks for 2 + 2.
+    Then, I perform the calculation.
+    </think>
+    The final answer is 4."""
+    expected = "The final answer is 4."
+    assert remove_thinking_sections(response) == expected
+
+
+def test_no_thinking_block():
+    response = "The model output does not contain any thinking section."
+    expected = response
+    assert remove_thinking_sections(response) == expected
+
+
+def test_only_thinking_block():
+    response = "<think>Computation in progress...</think>"
+    expected = ""
+    assert remove_thinking_sections(response) == expected
+
+
+def test_missing_closing_thinking_block():
+    response = "<think>Computation in progress..."
+    expected = response
+    assert remove_thinking_sections(response) == expected

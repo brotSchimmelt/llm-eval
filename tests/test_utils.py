@@ -87,7 +87,7 @@ def test_only_thinking_block():
     assert remove_thinking_sections(response) == expected
 
 
-def test_missing_closing_thinking_block():
+def test_missing_closing_thinking_tag():
     response = "<think>Computation in progress..."
     expected = response
     assert remove_thinking_sections(response) == expected

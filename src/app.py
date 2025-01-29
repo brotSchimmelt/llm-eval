@@ -18,14 +18,13 @@ def main():
     st.title("🚀 LLM Evaluation Toolkit")
 
     loader = DatasetLoader()
+    available_model_names = (
+        DEFAULT_SETTINGS["available_models"] + get_local_ollama_model_names()
+    )
 
     # ===== Sidebar Configuration =====
     with st.sidebar:
         st.header("⚙️ Model Settings")
-
-        available_model_names = (
-            DEFAULT_SETTINGS["available_models"] + get_local_ollama_model_names()
-        )
 
         model_name = st.selectbox(
             "Models",
@@ -71,22 +70,25 @@ def main():
         elif dataset_choice == "Predefined Dataset":
             predefined_name = st.selectbox(
                 "Select Dataset",
-                ["placeholder_mathqa", "placeholder_safetyqa"],
+                [
+                    "placeholder_mathqa",
+                    "placeholder_safetyqa",
+                ],  # TODO add real datasets and move to config.py
                 index=0,
             )
             df = loader.load_dataset(predefined_name=predefined_name)
 
-        else:  # Sample dataset TODO fix later
+        else:
             df = pd.DataFrame(
                 {
                     "question": [
                         "What is 2+2?",
-                        "Who was the first US president?",
+                        "What is the capital of France?",
                         "Explain quantum computing in simple terms",
                     ],
                     "ground_truth": [
                         "4",
-                        "George Washington",
+                        "Paris",
                         "Quantum computing uses quantum bits to perform calculations using quantum mechanics principles",
                     ],
                 }
@@ -117,15 +119,17 @@ def main():
                             sampling_params,
                         )
 
-                        # Grade response
+                        # grade response
                         if eval_method == "Exact Match":
                             score = ExactMatchGrader.grade(
                                 response, row[1]["ground_truth"]
                             )
                         else:
-                            criteria = row[1].get(
-                                "criteria", "Is the answer accurate and helpful?"
-                            )
+                            context = system_prompt + prompt
+                            fallback_criteria = DEFAULT_SETTINGS[
+                                "fallback_criteria"
+                            ].format(context)
+                            criteria = row[1].get("criteria", fallback_criteria)
                             score = LLMGrader.grade(response, criteria)
 
                         results.append(
@@ -140,10 +144,10 @@ def main():
                     except Exception as e:
                         st.error(f"Error processing question: {str(e)}")
 
-                    # Update progress bar
+                    # update progress bar
                     progress_bar.progress((idx + 1) / total_questions)
 
-                # Clear progress bar after completion
+                # clear progress bar after completion
                 progress_bar.empty()
 
                 # show results

@@ -24,29 +24,78 @@ def main():
 
     # ===== Sidebar Configuration =====
     with st.sidebar:
-        st.header("⚙️ Model Settings")
-
-        model_name = st.selectbox(
-            "Models",
-            available_model_names,
-            index=0,
+        sidebar_selections = DEFAULT_SETTINGS["sidebar_selections"]
+        sidebar_mode = st.pills(
+            "Select Pipeline Type",
+            sidebar_selections,
+            selection_mode="single",
+            default=sidebar_selections[0],
         )
 
-        system_prompt = st.text_area(
-            "System Prompt", DEFAULT_SETTINGS["system_prompt"], height=150
-        )
+        # initialize session states
+        if "precomputed_df" not in st.session_state:
+            st.session_state.precomputed_df = None
+        if "precomputed_error" not in st.session_state:
+            st.session_state.precomputed_error = None
 
-        col1, col2 = st.columns(2)
-        top_p = col1.number_input("Top-p", 0.0, 1.0, DEFAULT_SETTINGS["top_p"])
-        temperature = col2.number_input(
-            "Temperature", 0.0, 2.0, DEFAULT_SETTINGS["temperature"]
-        )
+        if sidebar_mode == sidebar_selections[0]:  # live Model
+            st.header("⚙️ Model Settings")
 
-        col3, _ = st.columns(2)
-        max_tokens = col3.number_input(
-            "Max Tokens", 50, 8_192, DEFAULT_SETTINGS["max_tokens"]
-        )
+            model_name = st.selectbox(
+                "Models",
+                available_model_names,
+                index=0,
+            )
 
+            system_prompt = st.text_area(
+                "System Prompt", DEFAULT_SETTINGS["system_prompt"], height=150
+            )
+
+            col1, col2 = st.columns(2)
+            top_p = col1.number_input("Top-p", 0.0, 1.0, DEFAULT_SETTINGS["top_p"])
+            temperature = col2.number_input(
+                "Temperature", 0.0, 2.0, DEFAULT_SETTINGS["temperature"]
+            )
+
+            col3, _ = st.columns(2)
+            max_tokens = col3.number_input(
+                "Max Tokens", 50, 8_192, DEFAULT_SETTINGS["max_tokens"]
+            )
+        else:  # precomputed Responses
+            st.header("📁 Precomputed Data")
+            uploaded_file = st.file_uploader(
+                "Upload Responses (CSV/JSON)",
+                type=["csv", "json"],
+                help="Required columns: 'question' and 'response'",
+            )
+
+            if uploaded_file:
+                try:
+                    if uploaded_file.name.endswith(".csv"):
+                        df = pd.read_csv(uploaded_file)
+                    else:
+                        df = pd.read_json(uploaded_file)
+
+                    # validate columns
+                    required_columns = {"question", "response"}
+                    if not required_columns.issubset(df.columns):
+                        missing = required_columns - set(df.columns)
+                        st.session_state.precomputed_error = (
+                            f"Missing columns: {', '.join(missing)}"
+                        )
+                    else:
+                        st.session_state.precomputed_df = df[["question", "response"]]
+                        st.session_state.precomputed_error = None
+                        st.success(f"Loaded {len(df)} responses")
+
+                except Exception as e:
+                    st.session_state.precomputed_error = f"Error loading file: {str(e)}"
+                    st.session_state.precomputed_df = None
+
+            if st.session_state.precomputed_error:
+                st.error(st.session_state.precomputed_error)
+
+        # evaluation method (shared between both modes)
         eval_method = st.radio(
             "Evaluation Method", ["Exact Match", "LLM Criteria"], index=0
         )
@@ -54,6 +103,7 @@ def main():
     # ===== Main Interface =====
     tab1, tab2 = st.tabs(["📊 Evaluation", "📂 Datasets"])
 
+    # ===== Evaluation Tab =====
     with tab1:
         dataset_choice = st.radio(
             "Choose Dataset Type",
@@ -73,7 +123,7 @@ def main():
                 [
                     "placeholder_mathqa",
                     "placeholder_safetyqa",
-                ],  # TODO add real datasets and move to config.py
+                ],
                 index=0,
             )
             df = loader.load_dataset(predefined_name=predefined_name)
@@ -90,51 +140,113 @@ def main():
                 progress_bar = st.progress(0)
                 total_questions = len(df)
 
-                sampling_params = {
-                    "temperature": temperature,
-                    "top_p": top_p,
-                    "max_tokens": max_tokens,
-                }
+                if sidebar_mode == "Live Model":
+                    sampling_params = {
+                        "temperature": temperature,
+                        "top_p": top_p,
+                        "max_tokens": max_tokens,
+                    }
 
-                for idx, row in enumerate(df.iterrows()):
-                    try:
-                        prompt = row[1]["question"]
-                        response = get_model_response(
-                            model_name,
-                            prompt,
-                            system_prompt,
-                            sampling_params,
-                        )
-
-                        # grade response
-                        if eval_method == "Exact Match":
-                            score = ExactMatchGrader.grade(
-                                response, row[1]["ground_truth"]
+                    for idx, row in enumerate(df.iterrows()):
+                        try:
+                            prompt = row[1]["question"]
+                            response = get_model_response(
+                                model_name,
+                                prompt,
+                                system_prompt,
+                                sampling_params,
                             )
-                        else:
-                            context = system_prompt + prompt
-                            fallback_criteria = DEFAULT_SETTINGS[
-                                "fallback_criteria"
-                            ].format(context)
-                            criteria = row[1].get("criteria", fallback_criteria)
-                            score = LLMGrader.grade(response, criteria)
 
-                        results.append(
-                            {
-                                "Question": row[1]["question"],
-                                "Expected": row[1]["ground_truth"],
-                                "Response": response,
-                                "Score": score,
-                            }
+                            # grade response
+                            if eval_method == "Exact Match":
+                                score = ExactMatchGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                            else:
+                                context = system_prompt + prompt
+                                fallback_criteria = DEFAULT_SETTINGS[
+                                    "fallback_criteria"
+                                ].format(context)
+                                criteria = row[1].get("criteria", fallback_criteria)
+                                score = LLMGrader.grade(response, criteria)
+
+                            results.append(
+                                {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Score": score,
+                                    "Source": "Live Model",
+                                }
+                            )
+
+                        except Exception as e:
+                            st.error(f"Error processing question: {str(e)}")
+
+                        progress_bar.progress((idx + 1) / total_questions)
+
+                else:  # precomputed Responses
+                    if st.session_state.precomputed_df is None:
+                        st.error(
+                            "Please upload a valid precomputed response file first!"
                         )
+                        return
 
+                    # merge with evaluation dataset
+                    try:
+                        merged_df = pd.merge(
+                            df,
+                            st.session_state.precomputed_df,
+                            on="question",
+                            how="left",
+                            suffixes=("", "_response"),
+                        )
                     except Exception as e:
-                        st.error(f"Error processing question: {str(e)}")
+                        st.error(f"Error merging datasets: {str(e)}")
+                        return
 
-                    # update progress bar
-                    progress_bar.progress((idx + 1) / total_questions)
+                    # check for missing responses
+                    missing_responses = merged_df[merged_df["response"].isna()]
+                    if not missing_responses.empty:
+                        st.error(
+                            f"Missing responses for {len(missing_responses)} questions:"
+                        )
+                        st.write(missing_responses[["question"]])
+                        return
 
-                # clear progress bar after completion
+                    for idx, row in enumerate(merged_df.iterrows()):
+                        try:
+                            response = row[1]["response"]
+
+                            # grade response
+                            if eval_method == "Exact Match":
+                                score = ExactMatchGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                            else:
+                                context = row[1].get("context", "")
+                                fallback_criteria = DEFAULT_SETTINGS[
+                                    "fallback_criteria"
+                                ].format(context)
+                                criteria = row[1].get("criteria", fallback_criteria)
+                                score = LLMGrader.grade(response, criteria)
+
+                            results.append(
+                                {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Score": score,
+                                    "Source": "Precomputed",
+                                }
+                            )
+
+                            progress_bar.progress((idx + 1) / total_questions)
+
+                        except Exception as e:
+                            st.error(f"Error processing question: {str(e)}")
+
+                # clear progress bar
                 progress_bar.empty()
 
                 # show results
@@ -142,13 +254,17 @@ def main():
                 results_df = pd.DataFrame(results)
                 st.dataframe(results_df, use_container_width=True)
 
-                # show metrics
-                avg_score = results_df["Score"].mean()
-                st.metric(
-                    "Average Score",
-                    f"{avg_score:.2f}/{'1.0' if eval_method == 'Exact Match' else '100'}",
-                )
+                # calculate average score
+                if eval_method == "Exact Match":
+                    avg_score = results_df["Score"].mean()
+                    score_range = "1.0"
+                else:
+                    avg_score = results_df["Score"].mean()
+                    score_range = "100"
 
+                st.metric("Average Score", f"{avg_score:.2f}/{score_range}")
+
+    # ===== Dataset Management Tab =====
     with tab2:
         st.subheader("Dataset Management")
         st.info("Predefined datasets stored in /data/predefined as Parquet files")

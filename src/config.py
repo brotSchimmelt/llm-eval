@@ -8,6 +8,7 @@ DEFAULT_SETTINGS = {
     "max_tokens": 256,
     "temperature": 0.7,
     "fallback_criteria": "Is the answer correct and answers the question accurately considering the prompt?\nPrompt: {}",
+    "sidebar_selections": ["Live Model", "Precomputed Responses"],
 }
 
 GRADING_PROMPT = """

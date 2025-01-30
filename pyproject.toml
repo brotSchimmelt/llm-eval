@@ -7,11 +7,15 @@ requires-python = ">=3.11"
 dependencies = [
     "json-repair>=0.35.0",
     "litellm>=1.59.8",
+    "nltk>=3.9.1",
     "ollama>=0.4.7",
     "pandas>=2.2.3",
     "pip>=25.0",
     "pyarrow>=19.0.0",
     "python-dotenv>=1.0.1",
+    "rouge-score>=0.1.2",
+    "scikit-learn>=1.6.1",
+    "sentence-transformers>=3.4.1",
     "streamlit>=1.41.1",
     "watchdog>=6.0.0",
 ]

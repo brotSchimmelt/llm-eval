@@ -112,11 +112,17 @@ def main():
         # Evaluation method (shared between both modes)
         eval_method = st.radio(
             "Evaluation Method",
-            ["Exact Match", "Overlap Metrics", "Semantic Similarity", "LLM Criteria"],
+            [
+                "Exact Match",
+                "Overlap Metrics",
+                "Semantic Similarity",
+                "LLM Criteria",
+                "Combined (All Methods)",
+            ],
             index=0,
         )
 
-        if eval_method == "LLM Criteria":
+        if eval_method == "LLM Criteria" or eval_method == "Combined (All Methods)":
             judge_model = st.selectbox(
                 "Select the Judge Model",
                 available_model_names,
@@ -225,6 +231,37 @@ def main():
                                     "Semantic Score": score,
                                     "Source": "Live Model",
                                 }
+                            elif eval_method == "Combined (All Methods)":
+                                exact_score = ExactMatchGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                rouge, bleu = OverlapGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                semantic_score = SemanticSimilarityGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                context = system_prompt + prompt
+                                fallback_criteria = DEFAULT_SETTINGS[
+                                    "fallback_criteria"
+                                ].format(context)
+                                criteria = row[1].get("criteria", fallback_criteria)
+                                llm_score = LLMGrader.grade(
+                                    response, criteria, model=judge_model
+                                )
+
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Match": float(exact_score),
+                                    "ROUGE Score": rouge,
+                                    "BLEU Score": bleu,
+                                    "LLM Score": llm_score,
+                                    "Semantic Score": semantic_score,
+                                    "Source": "Live Model",
+                                }
+
                             else:  # LLM Criteria
                                 context = system_prompt + prompt
                                 fallback_criteria = DEFAULT_SETTINGS[
@@ -315,6 +352,36 @@ def main():
                                     "Response": response,
                                     "Semantic Score": score,
                                     "Source": "Precomputed",
+                                }
+                            elif eval_method == "Combined (All Methods)":
+                                exact_score = ExactMatchGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                rouge, bleu = OverlapGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                semantic_score = SemanticSimilarityGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                context = system_prompt + prompt
+                                fallback_criteria = DEFAULT_SETTINGS[
+                                    "fallback_criteria"
+                                ].format(context)
+                                criteria = row[1].get("criteria", fallback_criteria)
+                                llm_score = LLMGrader.grade(
+                                    response, criteria, model=judge_model
+                                )
+
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Match": float(exact_score),
+                                    "ROUGE Score": rouge,
+                                    "BLEU Score": bleu,
+                                    "LLM Score": llm_score,
+                                    "Semantic Score": semantic_score,
+                                    "Source": "Live Model",
                                 }
                             else:  # LLM Criteria
                                 context = row[1].get("context", "")

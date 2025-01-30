@@ -6,6 +6,7 @@ import json_repair
 import litellm
 import nltk
 import ollama
+import streamlit as st
 import torch
 
 
@@ -172,3 +173,16 @@ def get_device() -> str:
         return "mps"
     else:
         return "cpu"
+
+
+def initialize_session_state() -> None:
+    """Initialize essential session state variables"""
+    session_vars = {
+        "precomputed_df": None,
+        "precomputed_error": None,
+        "remove_thinking_tokens": False,
+    }
+
+    for var, default in session_vars.items():
+        if var not in st.session_state:
+            st.session_state[var] = default

@@ -6,6 +6,7 @@ import json_repair
 import litellm
 import nltk
 import ollama
+import torch
 
 
 def extract_numeric_value(input_str: str) -> float:
@@ -154,3 +155,20 @@ def ensure_nltk_punkt() -> None:
         nltk.data.find("tokenizers/punkt")
     except LookupError:
         nltk.download("punkt")
+
+
+def get_device() -> str:
+    """
+    Determines the best available device for computation.
+
+    Returns:
+        str: "cuda" if an NVIDIA GPU is available,
+             "mps" if an Apple Silicon GPU is available,
+             otherwise "cpu".
+    """
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.backends.mps.is_available():
+        return "mps"
+    else:
+        return "cpu"

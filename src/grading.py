@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from config import DEFAULT_SETTINGS, GRADING_PROMPT
-from utils import extract_numeric_value
+from utils import extract_numeric_value, get_device
 
 
 class ExactMatchGrader:
@@ -86,6 +86,7 @@ class SemanticSimilarityGrader:
     using sentence embeddings and cosine similarity.
     """
 
+    device = get_device()
     model = SentenceTransformer(DEFAULT_SETTINGS["embedding_model"])
 
     @staticmethod
@@ -100,13 +101,18 @@ class SemanticSimilarityGrader:
         Returns:
             float: The cosine similarity score between 0 and 1.
         """
+
         try:
             embeddings = SemanticSimilarityGrader.model.encode(
                 [response, ground_truth], convert_to_tensor=True
-            )
+            ).to(SemanticSimilarityGrader.device)
+
+            embeddings = embeddings.cpu().numpy()
+
             cosine_sim = cosine_similarity(
                 embeddings[0].reshape(1, -1), embeddings[1].reshape(1, -1)
             )[0][0]
+
             return float(cosine_sim)
         except Exception as e:
             st.error(f"Semantic Grading error: {str(e)}")

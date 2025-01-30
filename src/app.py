@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 from config import DEFAULT_SETTINGS, DEMO_DATASET
 from dataset_loader import DatasetLoader
-from grading import ExactMatchGrader, LLMGrader
+from grading import ExactMatchGrader, LLMGrader, OverlapGrader, SemanticSimilarityGrader
 from utils import (
     ensure_nltk_punkt,
     extract_params_from_user_text,
@@ -45,7 +45,7 @@ def main():
         if "precomputed_error" not in st.session_state:
             st.session_state.precomputed_error = None
 
-        if sidebar_mode == sidebar_selections[0]:  # live model
+        if sidebar_mode == sidebar_selections[0]:  # Live Model
             st.header("⚙️ Model Settings")
 
             model_name = st.selectbox(
@@ -75,7 +75,7 @@ def main():
                 height=150,
             )
 
-        else:  # precomputed Responses
+        else:  # precomputed responses
             st.header("📁 Precomputed Data")
             uploaded_file = st.file_uploader(
                 "Upload Responses (CSV/JSON)",
@@ -109,9 +109,11 @@ def main():
             if st.session_state.precomputed_error:
                 st.error(st.session_state.precomputed_error)
 
-        # evaluation method (shared between both modes)
+        # Evaluation method (shared between both modes)
         eval_method = st.radio(
-            "Evaluation Method", ["Exact Match", "LLM Criteria"], index=0
+            "Evaluation Method",
+            ["Exact Match", "Overlap Metrics", "Semantic Similarity", "LLM Criteria"],
+            index=0,
         )
 
         if eval_method == "LLM Criteria":
@@ -193,7 +195,37 @@ def main():
                                 score = ExactMatchGrader.grade(
                                     response, row[1]["ground_truth"]
                                 )
-                            else:
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Score": float(score),
+                                    "Source": "Live Model",
+                                }
+                            elif eval_method == "Overlap Metrics":
+                                rouge, bleu = OverlapGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "ROUGE Score": rouge,
+                                    "BLEU Score": bleu,
+                                    "Source": "Live Model",
+                                }
+                            elif eval_method == "Semantic Similarity":
+                                score = SemanticSimilarityGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Semantic Score": score,
+                                    "Source": "Live Model",
+                                }
+                            else:  # LLM Criteria
                                 context = system_prompt + prompt
                                 fallback_criteria = DEFAULT_SETTINGS[
                                     "fallback_criteria"
@@ -202,23 +234,21 @@ def main():
                                 score = LLMGrader.grade(
                                     response, criteria, model=judge_model
                                 )
-
-                            results.append(
-                                {
+                                result = {
                                     "Question": row[1]["question"],
                                     "Expected": row[1]["ground_truth"],
                                     "Response": response,
-                                    "Score": score,
+                                    "LLM Score": score,
                                     "Source": "Live Model",
                                 }
-                            )
+
+                            results.append(result)
+                            progress_bar.progress((idx + 1) / total_questions)
 
                         except Exception as e:
                             st.error(f"Error processing question: {str(e)}")
 
-                        progress_bar.progress((idx + 1) / total_questions)
-
-                else:  # precomputed Responses
+                else:  # precomputed responses
                     if st.session_state.precomputed_df is None:
                         st.error(
                             "Please upload a valid precomputed response file first!"
@@ -256,7 +286,37 @@ def main():
                                 score = ExactMatchGrader.grade(
                                     response, row[1]["ground_truth"]
                                 )
-                            else:
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Score": float(score),
+                                    "Source": "Precomputed",
+                                }
+                            elif eval_method == "Overlap Metrics":
+                                rouge, bleu = OverlapGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "ROUGE Score": rouge,
+                                    "BLEU Score": bleu,
+                                    "Source": "Precomputed",
+                                }
+                            elif eval_method == "Semantic Similarity":
+                                score = SemanticSimilarityGrader.grade(
+                                    response, row[1]["ground_truth"]
+                                )
+                                result = {
+                                    "Question": row[1]["question"],
+                                    "Expected": row[1]["ground_truth"],
+                                    "Response": response,
+                                    "Semantic Score": score,
+                                    "Source": "Precomputed",
+                                }
+                            else:  # LLM Criteria
                                 context = row[1].get("context", "")
                                 fallback_criteria = DEFAULT_SETTINGS[
                                     "fallback_criteria"
@@ -265,17 +325,15 @@ def main():
                                 score = LLMGrader.grade(
                                     response, criteria, model=judge_model
                                 )
-
-                            results.append(
-                                {
+                                result = {
                                     "Question": row[1]["question"],
                                     "Expected": row[1]["ground_truth"],
                                     "Response": response,
-                                    "Score": score,
+                                    "LLM Score": score,
                                     "Source": "Precomputed",
                                 }
-                            )
 
+                            results.append(result)
                             progress_bar.progress((idx + 1) / total_questions)
 
                         except Exception as e:
@@ -289,15 +347,26 @@ def main():
                 results_df = pd.DataFrame(results)
                 st.dataframe(results_df, use_container_width=True)
 
-                # calculate average score
+                # calculate average scores
                 if eval_method == "Exact Match":
                     avg_score = results_df["Score"].mean()
-                    score_range = "1.0"
-                else:
-                    avg_score = results_df["Score"].mean()
-                    score_range = "100"
-
-                st.metric("Average Score", f"{avg_score:.2f}/{score_range}")
+                    st.metric("Average Score", f"{avg_score:.2f}/1.0")
+                elif eval_method == "Overlap Metrics":
+                    col1, col2 = st.columns(2)
+                    col1.metric(
+                        "Average ROUGE Score",
+                        f"{results_df['ROUGE Score'].mean():.2f}/1.0",
+                    )
+                    col2.metric(
+                        "Average BLEU Score",
+                        f"{results_df['BLEU Score'].mean():.2f}/1.0",
+                    )
+                elif eval_method == "Semantic Similarity":
+                    avg_score = results_df["Semantic Score"].mean()
+                    st.metric("Average Semantic Score", f"{avg_score:.2f}/1.0")
+                else:  # LLM Criteria
+                    avg_score = results_df["LLM Score"].mean()
+                    st.metric("Average LLM Score", f"{avg_score:.2f}/100")
 
     # ===== Dataset Management Tab =====
     with tab2:

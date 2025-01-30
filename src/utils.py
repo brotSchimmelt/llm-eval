@@ -63,7 +63,10 @@ def get_local_ollama_model_names() -> List[str]:
     if not _is_ollama_running():
         return []
 
-    return [f"ollama/{m.model}" for m in ollama.list().models]
+    ollama_models = [f"ollama/{m.model}" for m in ollama.list().models]
+    ollama_models = [m for m in ollama_models if "embed" not in m]
+
+    return ollama_models
 
 
 def get_model_response(

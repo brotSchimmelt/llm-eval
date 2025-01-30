@@ -5,9 +5,9 @@ import nltk
 import streamlit as st
 from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 from rouge_score import rouge_scorer
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
-# from sentence_transformers import SentenceTransformer
-# from sklearn.metrics.pairwise import cosine_similarity
 from config import DEFAULT_SETTINGS, GRADING_PROMPT
 from utils import extract_numeric_value
 
@@ -78,6 +78,39 @@ class OverlapGrader:
         rouge = OverlapGrader._rouge_score(response, ground_truth)
         bleu = OverlapGrader._bleu_score(response, ground_truth)
         return rouge, bleu
+
+
+class SemanticSimilarityGrader:
+    """
+    A utility class for evaluating responses based on semantic similarity
+    using sentence embeddings and cosine similarity.
+    """
+
+    model = SentenceTransformer(DEFAULT_SETTINGS["embedding_model"])
+
+    @staticmethod
+    def grade(response: str, ground_truth: str) -> float:
+        """
+        Computes the cosine similarity between the response and ground truth embeddings.
+
+        Args:
+            response (str): The response to be graded.
+            ground_truth (str): The correct or expected answer.
+
+        Returns:
+            float: The cosine similarity score between 0 and 1.
+        """
+        try:
+            embeddings = SemanticSimilarityGrader.model.encode(
+                [response, ground_truth], convert_to_tensor=True
+            )
+            cosine_sim = cosine_similarity(
+                embeddings[0].reshape(1, -1), embeddings[1].reshape(1, -1)
+            )[0][0]
+            return float(cosine_sim)
+        except Exception as e:
+            st.error(f"Semantic Grading error: {str(e)}")
+            return 0.0
 
 
 class LLMGrader:

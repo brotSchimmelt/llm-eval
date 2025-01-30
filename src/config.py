@@ -9,6 +9,7 @@ DEFAULT_SETTINGS = {
     "temperature": 0.7,
     "fallback_criteria": "Is the answer correct and answers the question accurately considering the prompt?\nPrompt: {}",
     "sidebar_selections": ["Live Model", "Precomputed Responses"],
+    "embedding_model": "all-MiniLM-L6-v2",
 }
 
 GRADING_PROMPT = """

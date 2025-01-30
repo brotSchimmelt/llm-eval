@@ -9,6 +9,7 @@ from utils import (
     extract_params_from_user_text,
     get_local_ollama_model_names,
     get_model_response,
+    remove_thinking_sections,
 )
 
 load_dotenv()
@@ -153,6 +154,10 @@ def main():
             st.subheader("Dataset Preview")
             st.dataframe(df.head(), use_container_width=True)
 
+            remove_thinking_tokens_flag = st.toggle(
+                "Remove Thinking Tokens from Model Response"
+            )
+
             if st.button("▶️ Run Evaluation", type="primary"):
                 results = []
                 progress_bar = st.progress(0)
@@ -177,6 +182,9 @@ def main():
                                 system_prompt,
                                 sampling_params,
                             )
+
+                            if remove_thinking_tokens_flag:
+                                response = remove_thinking_sections(response)
 
                             # grade response
                             if eval_method == "Exact Match":

@@ -1,6 +1,13 @@
-import litellm
-import streamlit as st
+from typing import Tuple
 
+import litellm
+import nltk
+import streamlit as st
+from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
+from rouge_score import rouge_scorer
+
+# from sentence_transformers import SentenceTransformer
+# from sklearn.metrics.pairwise import cosine_similarity
 from config import DEFAULT_SETTINGS, GRADING_PROMPT
 from utils import extract_numeric_value
 
@@ -24,6 +31,53 @@ class ExactMatchGrader:
             bool: True if the response matches the ground truth exactly, False otherwise.
         """
         return str(response).strip().lower() == str(ground_truth).strip().lower()
+
+
+class OverlapGrader:
+    """
+    A utility class for evaluating responses by combining ROUGE and BLEU scores.
+    """
+
+    rouge_scorer = rouge_scorer.RougeScorer(
+        ["rouge1", "rouge2", "rougeL"], use_stemmer=True
+    )
+    bleu_smoothing = SmoothingFunction()
+
+    @staticmethod
+    def _rouge_score(response: str, ground_truth: str) -> float:
+        """
+        Computes ROUGE-1, ROUGE-2, and ROUGE-L scores and returns their average.
+        """
+        scores = OverlapGrader.rouge_scorer.score(ground_truth, response)
+        rouge1 = scores["rouge1"].fmeasure
+        rouge2 = scores["rouge2"].fmeasure
+        rougeL = scores["rougeL"].fmeasure
+        return (rouge1 + rouge2 + rougeL) / 3
+
+    @staticmethod
+    def _bleu_score(response: str, ground_truth: str) -> float:
+        """
+        Computes BLEU score and normalizes it between 0 and 1.
+        """
+        reference = nltk.word_tokenize(ground_truth.lower())
+        candidate = nltk.word_tokenize(response.lower())
+        return sentence_bleu(
+            [reference],
+            candidate,
+            smoothing_function=OverlapGrader.bleu_smoothing.method1,
+        )
+
+    @staticmethod
+    def grade(response: str, ground_truth: str) -> Tuple[float, float]:
+        """
+        Computes ROUGE and BLEU scores and returns them as a tuple.
+
+        Returns:
+            Tuple[float, float]: (ROUGE Score, BLEU Score)
+        """
+        rouge = OverlapGrader._rouge_score(response, ground_truth)
+        bleu = OverlapGrader._bleu_score(response, ground_truth)
+        return rouge, bleu
 
 
 class LLMGrader:

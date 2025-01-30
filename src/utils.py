@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 import json_repair
 import litellm
+import nltk
 import ollama
 
 
@@ -142,3 +143,14 @@ def extract_params_from_user_text(user_text: str) -> Dict[str, Any]:
         return {}
 
     return params
+
+
+def ensure_nltk_punkt() -> None:
+    """
+    Ensures that the NLTK 'punkt' tokenizer is available.
+    Downloads it only if it is not already installed.
+    """
+    try:
+        nltk.data.find("tokenizers/punkt")
+    except LookupError:
+        nltk.download("punkt")

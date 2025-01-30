@@ -6,12 +6,14 @@ from config import DEFAULT_SETTINGS, DEMO_DATASET
 from dataset_loader import DatasetLoader
 from grading import ExactMatchGrader, LLMGrader
 from utils import (
+    ensure_nltk_punkt,
     extract_params_from_user_text,
     get_local_ollama_model_names,
     get_model_response,
     remove_thinking_sections,
 )
 
+ensure_nltk_punkt()
 load_dotenv()
 
 

@@ -23,10 +23,12 @@ def configure_sidebar() -> dict:
     """Configure sidebar components and return settings"""
     st.sidebar.title("⚙️ Configuration")
     settings = {
-        "mode": st.sidebar.radio(
+        "mode": st.sidebar.pills(
             "Pipeline Type",
             options=DEFAULT_SETTINGS["sidebar_selections"],
-            index=0,
+            # index=0,
+            selection_mode="single",
+            default=DEFAULT_SETTINGS["sidebar_selections"][0],
         )
     }
 
@@ -152,7 +154,9 @@ def load_dataset() -> pd.DataFrame:
     try:
         if dataset_choice == "Upload Custom Dataset":
             if uploaded_file := st.file_uploader(
-                "Upload CSV/JSON", type=["csv", "json"]
+                "Upload CSV/JSON",
+                type=["csv", "json"],
+                help="Required columns: 'question' and 'ground_truth'",
             ):
                 return loader.load_dataset(uploaded_file=uploaded_file)
         elif dataset_choice == "Predefined Dataset":
@@ -161,6 +165,10 @@ def load_dataset() -> pd.DataFrame:
                 options=get_predefined_dataset_names(),
                 index=0,
             )
+            st.info(
+                f"To add more predefined datasets, save them as .parquet files in {DEFAULT_SETTINGS['predefined_dataset_path']}. Each file must include the columns: 'question' and 'ground_truth'."
+            )
+
             return loader.load_dataset(predefined_name=predefined_name)
         else:
             return pd.DataFrame(DEMO_DATASET)

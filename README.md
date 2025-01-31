@@ -1,149 +1,177 @@
-# LLM Evaluation Toolkit
+# LLM-Eval
 
-A Streamlit-based application for evaluating Large Language Models (LLMs) across multiple providers, featuring both cloud-based and local models.
+**LLM-Eval** is a Streamlit-based application for evaluating Large Language Model (LLM) pipelines against predefined or custom datasets using various metrics. It allows you to:
+
+- Compare model outputs to ground-truth answers using **exact match**, **ROUGE**, **BLEU**, **semantic similarity**, and **LLM-based** (GPT-style) criteria.
+- Use **live** models (local or remote) or **precomputed** responses.
+- Effortlessly upload your own custom dataset in CSV/JSON format or leverage built-in datasets.
+
+![Screenshot](https://github.com/user-attachments/assets/b29a7b07-5f6e-48a4-8f16-421d2f2816ce)
+
+## Table of Contents
+
+1. [Features](#features)
+2. [Project Structure](#project-structure)
+3. [Requirements and Installation](#requirements-and-installation)
+4. [Usage](#usage)
+   - [Local Environment](#local-environment)
+   - [Docker](#docker)
+5. [Application Workflow](#application-workflow)
+6. [Configuration](#configuration)
+7. [Adding Your Own Datasets](#adding-your-own-datasets)
+8. [License](#license)
+
+---
 
 ## Features
 
-- **Multi-Model Support**: Evaluate models from OpenAI, Anthropic, Hugging Face, and local Ollama models
-- **Dataset Management**:
-  - Predefined datasets (Parquet format)
-  - Custom dataset upload (CSV/JSON)
-  - Automatic schema validation
-- **Evaluation Methods**:
-  - Exact match comparison
-  - LLM-as-judge criteria evaluation
-- **Parameter Control**:
-  - System prompts
-  - Temperature, Top-p, Top-k
-  - Max tokens
-- **Local Model Support**: Integration with Ollama for local model testing
-- **Results Visualization**: Interactive tables and metrics dashboard
+- **Multiple Evaluation Methods**\
+  Evaluate your model outputs using:
 
-## Installation
+  - **Exact Match**: Checks if the response text matches exactly (case-insensitive).
+  - **Overlap Metrics**: Uses ROUGE (ROUGE-1, ROUGE-2, ROUGE-L) and BLEU scores.
+  - **Semantic Similarity**: Computes cosine similarity via SentenceTransformers.
+  - **LLM Criteria**: Leverages an LLM to "judge" answers based on custom or default prompts.
 
-### Prerequisites
+- **Live vs. Precomputed Responses**
 
-- Python 3.11
-- [Ollama](https://ollama.ai/) (for local models)
+  - **Live Model**: Query a model in real-time (e.g. GPT-4o or Ollama models).
+  - **Precomputed Responses**: Upload previously generated answers for offline or batch scoring.
+
+- **Easy Integration**
+
+  - Simple UI with Streamlit.
+  - Automatic caching of embeddings and partial results.
+  - Docker-ready for quick deployment.
+
+---
+
+## Project Structure
+
+```plaintext
+.
+├── Dockerfile
+├── README.md
+├── data
+│   ├── custom               # Any custom uploaded data will be stored here
+│   └── predefined           # Built-in example datasets
+│       ├── gsm8k_100.parquet
+│       └── mathqa_100.parquet
+├── example.env              # Example environment file
+├── pyproject.toml
+├── src
+│   ├── app.py               # Streamlit application entry point
+│   ├── config.py            # Default settings and prompts
+│   ├── dataset_loader.py
+│   ├── grading.py           # Evaluation/Scoring logic
+│   ├── utils.py
+```
+
+---
+
+## Requirements and Installation
+
+- **Python** >= 3.11
+- **uv** >= 0.5.26 ([Install ```uv```](https://docs.astral.sh/uv/))
+- (Optional) Docker for container-based deployment
+
+### Install dependencies locally (without Docker)
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/llm-evaluation-toolkit.git
-cd llm-evaluation-toolkit
+# clone the repository
+git clone https://github.com/brotSchimmelt/llm-eval.git
+cd llm-eval
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac)
-venv\Scripts\activate  # Windows
+# create and activate a virtual environment (recommended)
+uv venv
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables
-cp .env.example .env
+# install dependencies
+uv sync
+source .venv/bin/activate
 ```
 
-## Configuration
-
-Edit `.env` file with your API keys:
-
-```env
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key
-HUGGINGFACE_API_KEY=your_hf_key
-```
-
-For local Ollama models:
-
-```bash
-# Start Ollama service
-ollama serve
-
-# Pull desired models
-ollama pull llama2
-ollama pull mistral
-```
+---
 
 ## Usage
 
-```bash
-streamlit run src/app.py
-```
+### Local Environment
 
-### Application Workflow
+1. **Set up environment variables** (optional):\
+   For example, save your OpenAI API key in an ```.env``` file.
 
-1. **Model Configuration** (sidebar):
-   - Select model provider
-   - Set system prompt
-   - Adjust generation parameters
-2. **Dataset Selection**:
-   - Use sample dataset
-   - Load predefined dataset
-   - Upload custom dataset
-3. **Run Evaluation**:
-   - Choose evaluation method
-   - View results in interactive table
-   - Analyze performance metrics
-
-## Evaluation Methods
-
-### 1. Exact Match
-
-```python
-# Example evaluation
-{
-  "question": "What is 2+2?",
-  "ground_truth": "4"
-}
-```
-
-### 2. LLM Criteria Evaluation
-
-```python
-{
-  "question": "Explain quantum computing",
-  "criteria": "Answer should be under 100 words and avoid technical jargon"
-}
-```
-
-## Example Dataset
-
-`sample_dataset.json`
-
-```json
-[
-  {
-    "question": "What is the capital of France?",
-    "ground_truth": "Paris",
-    "criteria": "Answer must be in English"
-  },
-  {
-    "question": "Convert 100°F to Celsius",
-    "ground_truth": "37.78",
-    "criteria": "Provide numerical answer with two decimal places"
-  }
-]
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch:
+2. **Run the Streamlit application**:
 
    ```bash
-   git checkout -b feature/new-feature
+   streamlit run src/app.py
    ```
 
-3. Commit your changes
-4. Push to the branch
-5. Open a pull request
+3. **Access the app**:\
+   Open your web browser at [http://localhost:8501](http://localhost:8501).
+
+### Docker
+
+1. **Build the Docker image**:
+
+   ```bash
+   docker build -t llm-eval .
+   ```
+
+2. **Run the container**:
+
+   ```bash
+   docker run -p 8501:8501 --env-file .env llm-eval
+   ```
+
+3. **Access the app**:\
+   Open your browser at [http://localhost:8501](http://localhost:8501).
+
+---
+
+## Application Workflow
+
+Once the app is running locally or in a container:
+
+1. **Select a Dataset**:
+
+   - **Sample Dataset**: Preloaded small data to test if the models run.
+   - **Predefined Dataset**: Choose from built-in `.parquet` files in `data/predefined/`.
+   - **Upload Custom Dataset**: Upload your own CSV/JSON with `question` and `ground_truth` columns.
+
+2. **Choose a Pipeline Mode** in the sidebar:
+
+   - **Live Model**: Configure and query an LLM in real-time.
+   - **Precomputed Responses**: Upload a CSV/JSON containing pre-generated answers.
+
+3. **Select Evaluation Method**:
+
+   - *Exact Match*, *Overlap Metrics*, *Semantic Similarity*, *LLM Criteria*, or *Combined*.
+
+4. **Run Evaluation**: Click **“Run Evaluation”** and review the scores.
+
+---
+
+## Configuration
+
+The default configurations are found in [`config.py`](./src/config.py). Key settings include:
+
+- Paths for **predefined** and **custom** dataset directories.
+- Default model (`"gpt-4o-mini"`) and sampling parameters (`top_p`, `temperature`, etc.).
+- `fallback_criteria` for auto-generating an LLM-based grading prompt if none is provided.
+
+---
+
+## Adding Your Own Datasets
+
+1. **Custom**:
+   - Place a CSV or JSON with `question` and `ground_truth` columns in `data/custom/`.
+   - Or upload it via the UI.
+2. **Predefined**:
+   - Convert your dataset to `.parquet` format.
+   - Place it in `data/predefined/`.
+   - Restart the app to see your dataset listed.
+
+---
 
 ## License
 
-MIT License
-
-## Acknowledgments
-
-- [LiteLLM](https://github.com/BerriAI/litellm) for model abstraction
-- [Streamlit](https://streamlit.io) for UI framework
-- [Ollama](https://ollama.ai/) for local model management
+This project is licensed under the [MIT License](./LICENSE).

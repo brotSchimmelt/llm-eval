@@ -84,7 +84,7 @@ class DatasetLoader:
             or None if the dataset cannot be found or loaded.
         """
         try:
-            path = f"data/predefined/{name}.parquet"
+            path = f"{DEFAULT_SETTINGS['predefined_dataset_path']}{name}.parquet"
             return pd.read_parquet(path)
         except Exception as e:
             st.error(f"Error loading dataset: {str(e)}")

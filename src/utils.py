@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 from typing import Any, Dict, List
@@ -8,6 +9,8 @@ import nltk
 import ollama
 import streamlit as st
 import torch
+
+from config import DEFAULT_SETTINGS
 
 
 def extract_numeric_value(input_str: str) -> float:
@@ -186,3 +189,15 @@ def initialize_session_state() -> None:
     for var, default in session_vars.items():
         if var not in st.session_state:
             st.session_state[var] = default
+
+
+def get_predefined_dataset_names() -> List[str]:
+    directory = DEFAULT_SETTINGS["predefined_dataset_path"]
+    return [
+        f.replace(".parquet", "")
+        for f in os.listdir(directory)
+        if f.endswith(".parquet")
+    ]
+
+
+def get_predefined_dataset_paths() -> List[str]: ...

@@ -1,6 +1,6 @@
 DEFAULT_SETTINGS = {
-    "predefined_dataset_path": "data/predefined",
-    "custom_dataset_path": "data/custom",
+    "predefined_dataset_path": "data/predefined/",
+    "custom_dataset_path": "data/custom/",
     "grading_model": "gpt-4o-mini",
     "available_models": ["gpt-4o-mini"],
     "system_prompt": "Only provide the final answer and no other tokens.",
@@ -10,6 +10,7 @@ DEFAULT_SETTINGS = {
     "fallback_criteria": "Is the answer correct and answers the question accurately considering the prompt?\nPrompt: {}",
     "sidebar_selections": ["Live Model", "Precomputed Responses"],
     "embedding_model": "all-MiniLM-L6-v2",
+    "predefined_datasets": ["mathqa_100", "gsm8k_100"],
 }
 
 GRADING_PROMPT = """

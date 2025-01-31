@@ -10,6 +10,7 @@ from utils import (
     extract_params_from_user_text,
     get_local_ollama_model_names,
     get_model_response,
+    get_predefined_dataset_names,
     initialize_session_state,
     remove_thinking_sections,
 )
@@ -129,7 +130,7 @@ def handle_uploaded_file(uploaded_file) -> None:
 def main():
     """Main application entry point"""
     st.set_page_config(page_title="LLM Evaluator", layout="wide")
-    st.title("🚀 LLM Evaluation Toolkit")
+    st.title("LLM Evaluation Toolkit")
     initialize_session_state()
 
     settings = configure_sidebar()
@@ -157,7 +158,7 @@ def load_dataset() -> pd.DataFrame:
         elif dataset_choice == "Predefined Dataset":
             predefined_name = st.selectbox(
                 "Select Dataset",
-                options=["placeholder_mathqa", "placeholder_safetyqa"],
+                options=get_predefined_dataset_names(),
                 index=0,
             )
             return loader.load_dataset(predefined_name=predefined_name)

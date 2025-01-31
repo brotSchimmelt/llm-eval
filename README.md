@@ -53,7 +53,7 @@
 ## Requirements and Installation
 
 - **Python** >= 3.11
-- **uv** >= 0.5.26 ([Install ```uv```](https://docs.astral.sh/uv/))
+- **uv** >= 0.5.26 ([How to install uv](https://docs.astral.sh/uv/))
 - (Optional) Docker for container-based deployment
 
 ### Install dependencies locally (without Docker)

@@ -8,21 +8,6 @@
 
 ![Screenshot](https://github.com/user-attachments/assets/b29a7b07-5f6e-48a4-8f16-421d2f2816ce)
 
-## Table of Contents
-
-1. [Features](#features)
-2. [Project Structure](#project-structure)
-3. [Requirements and Installation](#requirements-and-installation)
-4. [Usage](#usage)
-   - [Local Environment](#local-environment)
-   - [Docker](#docker)
-5. [Application Workflow](#application-workflow)
-6. [Configuration](#configuration)
-7. [Adding Your Own Datasets](#adding-your-own-datasets)
-8. [License](#license)
-
----
-
 ## Features
 
 - **Multiple Evaluation Methods**\
@@ -43,8 +28,6 @@
   - Simple UI with Streamlit.
   - Automatic caching of embeddings and partial results.
   - Docker-ready for quick deployment.
-
----
 
 ## Project Structure
 
@@ -67,8 +50,6 @@
 │   ├── utils.py
 ```
 
----
-
 ## Requirements and Installation
 
 - **Python** >= 3.11
@@ -89,8 +70,6 @@ uv venv
 uv sync
 source .venv/bin/activate
 ```
-
----
 
 ## Usage
 
@@ -125,8 +104,6 @@ source .venv/bin/activate
 3. **Access the app**:\
    Open your browser at [http://localhost:8501](http://localhost:8501).
 
----
-
 ## Application Workflow
 
 Once the app is running locally or in a container:
@@ -148,8 +125,6 @@ Once the app is running locally or in a container:
 
 4. **Run Evaluation**: Click **“Run Evaluation”** and review the scores.
 
----
-
 ## Configuration
 
 The default configurations are found in [`config.py`](./src/config.py). Key settings include:
@@ -157,8 +132,6 @@ The default configurations are found in [`config.py`](./src/config.py). Key sett
 - Paths for **predefined** and **custom** dataset directories.
 - Default model (`"gpt-4o-mini"`) and sampling parameters (`top_p`, `temperature`, etc.).
 - `fallback_criteria` for auto-generating an LLM-based grading prompt if none is provided.
-
----
 
 ## Adding Your Own Datasets
 
@@ -169,8 +142,6 @@ The default configurations are found in [`config.py`](./src/config.py). Key sett
    - Convert your dataset to `.parquet` format.
    - Place it in `data/predefined/`.
    - Restart the app to see your dataset listed.
-
----
 
 ## License
 

@@ -6,7 +6,6 @@ dist/
 wheels/
 *.egg-info
 .python-version
-*.lock
 
 # Virtual environments
 .venv
@@ -19,7 +18,4 @@ wheels/
 .env
 
 # test files
-foo.py
-test.csv
-content.txt
 collect_file_content.py

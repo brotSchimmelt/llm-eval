@@ -1,6 +1,6 @@
 [project]
 name = "llm-eval"
-version = "0.1.1"
+version = "0.1.2"
 description = "Evaluate LLM pipelines on predefined or custom datasets with different evaluation metrics."
 readme = "README.md"
 requires-python = ">=3.11"

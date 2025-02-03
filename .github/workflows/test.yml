@@ -39,4 +39,4 @@ jobs:
           uv sync
 
       - name: Run Pytest
-        run: pytest --tb=short --disable-warnings
+        run: uv run pytest --tb=short --disable-warnings

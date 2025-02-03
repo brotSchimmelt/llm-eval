@@ -131,7 +131,7 @@ def handle_uploaded_file(uploaded_file) -> None:
 
 def main():
     """Main application entry point"""
-    st.set_page_config(page_title="LLM Evaluator", layout="wide")
+    st.set_page_config(page_title="LLM Evaluator", page_icon="⚖️", layout="wide")
     st.title("LLM Evaluation Toolkit")
     initialize_session_state()
 

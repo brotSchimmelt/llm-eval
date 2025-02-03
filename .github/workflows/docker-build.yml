@@ -23,6 +23,9 @@ jobs:
       - name: Convert GitHub Username to Lowercase
         run: echo "USERNAME_LC=${GITHUB_ACTOR,,}" >> $GITHUB_ENV
 
+      - name: Extract Version from pyproject.toml
+        run: echo "VERSION=$(grep -Po '(?<=version = \")\d+\.\d+\.\d+' pyproject.toml)" >> $GITHUB_ENV
+
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
@@ -41,6 +44,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/${{ env.USERNAME_LC }}/llm-eval:latest
+          tags: |
+            ghcr.io/${{ env.USERNAME_LC }}/llm-eval:latest
+            ghcr.io/${{ env.USERNAME_LC }}/llm-eval:${{ env.VERSION }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache

@@ -89,10 +89,12 @@ source .venv/bin/activate
 
 ### Docker
 
-1. **Build the Docker image**:
+1. **Build or download the Docker image**:
 
    ```bash
    docker build -t llm-eval .
+   # or
+   docker pull ghcr.io/brotschimmelt/llm-eval:latest
    ```
 
 2. **Run the container**:

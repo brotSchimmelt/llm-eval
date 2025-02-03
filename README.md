@@ -1,7 +1,6 @@
 # LLM-Eval
 
 ![Build Docker Image](https://img.shields.io/github/actions/workflow/status/brotSchimmelt/llm-eval/docker-build.yml?style=flat-square&label=Docker%20Image&color=blue)
-
 ![Tests](https://img.shields.io/github/actions/workflow/status/brotSchimmelt/llm-eval/test.yml?style=flat-square&label=Tests&color=green)
 
 **LLM-Eval** is a Streamlit-based application for evaluating Large Language Model (LLM) pipelines against predefined or custom datasets using various metrics. It allows you to:

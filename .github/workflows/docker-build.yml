@@ -44,6 +44,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/${{ env.USERNAME_LC }}/llm-eval:latest
             ghcr.io/${{ env.USERNAME_LC }}/llm-eval:${{ env.VERSION }}

@@ -2,11 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - "v*.*.*"
 
 jobs:
   build:
@@ -23,8 +20,8 @@ jobs:
       - name: Convert GitHub Username to Lowercase
         run: echo "USERNAME_LC=${GITHUB_ACTOR,,}" >> $GITHUB_ENV
 
-      - name: Extract Version from pyproject.toml
-        run: echo "VERSION=$(grep -Po '(?<=version = \")\d+\.\d+\.\d+' pyproject.toml)" >> $GITHUB_ENV
+      - name: Extract Version from Tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

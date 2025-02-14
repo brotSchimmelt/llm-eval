@@ -7,7 +7,8 @@
 
 - Compare model outputs to ground-truth answers using **exact match**, **ROUGE**, **BLEU**, **semantic similarity**, and **LLM-based** (GPT-style) criteria.
 - Use **live** models (local or remote) or **precomputed** responses.
-- Effortlessly upload your own custom dataset in CSV/JSON format or leverage built-in datasets.
+- Effortlessly upload your own custom dataset in CSV/JSON format.
+- Use local models served with Ollama or OpenAI compatible API endpoints.
 
 ![Screenshot](https://github.com/user-attachments/assets/b29a7b07-5f6e-48a4-8f16-421d2f2816ce)
 
@@ -67,7 +68,7 @@ git clone https://github.com/brotSchimmelt/llm-eval.git
 cd llm-eval
 
 # create and activate a virtual environment (recommended)
-uv venv
+uv venv --python 3.11
 
 # install dependencies
 uv sync
@@ -108,6 +109,27 @@ source .venv/bin/activate
 
 3. **Access the app**:\
    Open your browser at [http://localhost:8501](http://localhost:8501).
+
+### Cloud GPU
+
+You can also use [terraform](https://www.terraform.io) to provision a cloud GPU instance and run the app there. The repo contains a [main.tf](main.tf) file with the necessary configuration for [lambda labs](https://lambdalabs.com). Configure all variables including the API key in `terraform.tfvars`. Add an ssh key to your account and set the `ssh_key_name` variable to the key's name. Also set the `machine_name` variable to the name you want to give to your machine.
+
+Then you can run the following commands:
+
+```bash
+terraform init
+
+# to plan changes
+terraform plan
+
+# apply the changes and provision the instance
+terraform apply -var-file="terraform.tfvars"
+
+# to destroy the instance
+terraform destroy -var-file="terraform.tfvars"
+```
+
+Access the app at your-ip:8501.
 
 ## Application Workflow
 

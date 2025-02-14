@@ -8,3 +8,10 @@ __pycache__
 env/
 venv/
 .venv/
+*.tf
+*.tfvars
+.terraform
+*.hcl
+*.info
+*.backup
+*.tfstate

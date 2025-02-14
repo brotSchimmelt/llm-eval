@@ -19,3 +19,11 @@ wheels/
 
 # test files
 collect_file_content.py
+
+# terraform
+*.tfvars
+.terraform
+*.hcl
+*.info
+*.backup
+*.tfstate

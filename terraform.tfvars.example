@@ -1,0 +1,3 @@
+lambdalabs_api_key = "secret_..."
+ssh_key_name = "ssh-key-name"
+machine_name = "My Machine"
